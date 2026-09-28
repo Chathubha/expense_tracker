@@ -51,6 +51,7 @@ export default function Dashboard() {
   // Filter State
   const [filterMonth, setFilterMonth] = useState<string>('All');
   const [filterType, setFilterType] = useState<string>('All');
+  const [filterDate, setFilterDate] = useState<string>(''); // Exact date filter
 
   useEffect(() => {
     if (!editingId) {
@@ -151,7 +152,8 @@ export default function Dashboard() {
   const filteredTransactions = transactions.filter(t => {
     const matchMonth = filterMonth === 'All' || t.date.startsWith(filterMonth);
     const matchType = filterType === 'All' || t.type === filterType;
-    return matchMonth && matchType;
+    const matchDate = filterDate === '' || t.date === filterDate;
+    return matchMonth && matchType && matchDate;
   });
 
   const totalIncome = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
@@ -188,29 +190,46 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Filters & Action */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div className="flex flex-col sm:flex-row gap-3 flex-1">
+        <div className="flex flex-col sm:flex-row gap-3 flex-1 flex-wrap">
           <div className="flex items-center space-x-2">
             <Filter className="w-5 h-5 text-gray-400" />
             <select
               value={filterMonth}
-              onChange={(e) => setFilterMonth(e.target.value)}
+              onChange={(e) => { setFilterMonth(e.target.value); setFilterDate(''); }}
               className="border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 p-2 bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
             >
-              <option value="All">All Time</option>
+              <option value="All">All Months</option>
               {availableMonths.map(m => (
                 <option key={m} value={m}>{new Date(m).toLocaleDateString('default', { month: 'long', year: 'numeric' })}</option>
               ))}
             </select>
           </div>
+          <div className="flex items-center space-x-2 border-l border-gray-200 pl-3">
+            <span className="text-sm text-gray-500 font-medium">Or Exact Date:</span>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => { setFilterDate(e.target.value); setFilterMonth('All'); }}
+              className="border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 p-1.5 bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
+            />
+          </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 p-2 bg-gray-50 hover:bg-gray-100 transition cursor-pointer"
+            className="border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 p-2 bg-gray-50 hover:bg-gray-100 transition cursor-pointer ml-0 sm:ml-2"
           >
             <option value="All">All Transactions</option>
             <option value="income">Incomes Only</option>
             <option value="expense">Expenses Only</option>
           </select>
+          {(filterMonth !== 'All' || filterType !== 'All' || filterDate !== '') && (
+            <button 
+              onClick={() => { setFilterMonth('All'); setFilterType('All'); setFilterDate(''); }}
+              className="text-sm text-red-500 hover:text-red-700 flex items-center p-2"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
