@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Wallet, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -77,8 +77,8 @@ export default function Register() {
         <div className="mx-auto w-full max-w-sm lg:max-w-md">
           
           <div className="lg:hidden flex justify-center mb-8">
-            <div className="bg-indigo-50 p-3 rounded-2xl">
-              <Wallet className="h-8 w-8 text-indigo-600" />
+            <div className="bg-white p-1 rounded-2xl shadow-sm border border-gray-100">
+              <img src="/logo.jpg" alt="Logo" className="h-10 w-10 rounded-xl object-contain" />
             </div>
           </div>
 

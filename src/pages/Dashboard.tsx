@@ -45,6 +45,8 @@ export default function Dashboard() {
   const [amount, setAmount] = useState('');
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [category, setCategory] = useState(EXPENSE_CATEGORIES[0]);
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -130,9 +132,9 @@ export default function Dashboard() {
     setAmount(transaction.amount.toString());
     setTransactionType(transaction.type || 'expense');
     setCategory(transaction.category);
+    setIsCustomCategory(false);
     setDate(transaction.date);
     setShowForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const resetForm = () => {
@@ -140,6 +142,8 @@ export default function Dashboard() {
     setAmount('');
     setTransactionType('expense');
     setCategory(EXPENSE_CATEGORIES[0]);
+    setIsCustomCategory(false);
+    setCustomCategory('');
     setDate(new Date().toISOString().split('T')[0]);
     setShowForm(false);
     setEditingId(null);
@@ -172,7 +176,12 @@ export default function Dashboard() {
       return acc;
     }, []).sort((a: any, b: any) => b.value - a.value);
 
-  const activeCategories = transactionType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  const userExpenseCategories = Array.from(new Set(transactions.filter(t => t.type === 'expense').map(t => t.category)));
+  const userIncomeCategories = Array.from(new Set(transactions.filter(t => t.type === 'income').map(t => t.category)));
+
+  const baseCategories = transactionType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  const userCategories = transactionType === 'expense' ? userExpenseCategories : userIncomeCategories;
+  const activeCategories = Array.from(new Set([...baseCategories, ...userCategories]));
 
   return (
     <div className="space-y-6">
@@ -258,90 +267,134 @@ export default function Dashboard() {
       </div>
 
       {showForm && (
-        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-blue-100 relative overflow-hidden">
-          <div className={`absolute top-0 left-0 w-full h-1 ${transactionType === 'income' ? 'bg-green-500' : 'bg-red-500'}`}></div>
-          <h2 className="text-xl font-bold mb-6 text-gray-800">{editingId ? 'Update Transaction' : 'Add New Transaction'}</h2>
-          
-          <div className="flex mb-6 space-x-2 p-1 bg-gray-100 rounded-lg w-fit">
-            <button
-              type="button"
-              onClick={() => setTransactionType('expense')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition ${transactionType === 'expense' ? 'bg-white shadow-sm text-red-600' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              Expense
-            </button>
-            <button
-              type="button"
-              onClick={() => setTransactionType('income')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition ${transactionType === 'income' ? 'bg-white shadow-sm text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
-            >
-              Income
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Date</label>
-              <input
-                type="date"
-                required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2.5 transition"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Amount (Rs.)</label>
-              <input
-                type="number"
-                required
-                min="0.01"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2.5 transition"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2.5 bg-white transition cursor-pointer"
-              >
-                {activeCategories.map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Title / Note</label>
-              <input
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={transactionType === 'income' ? "e.g., Salary" : "e.g., Weekly Groceries"}
-                className="w-full border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2.5 transition"
-              />
-            </div>
-            <div className="lg:col-span-4 flex items-center justify-end space-x-3 mt-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-blue-100 relative w-full max-w-2xl my-8">
+            <div className={`absolute top-0 left-0 w-full h-1 ${transactionType === 'income' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <h2 className="text-xl font-bold mb-6 text-gray-800">{editingId ? 'Update Transaction' : 'Add New Transaction'}</h2>
+            
+            <div className="flex mb-6 space-x-2 p-1 bg-gray-100 rounded-lg w-fit">
               <button
                 type="button"
-                onClick={resetForm}
-                className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium"
+                onClick={() => {
+                  setTransactionType('expense');
+                  setIsCustomCategory(false);
+                }}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition ${transactionType === 'expense' ? 'bg-white shadow-sm text-red-600' : 'text-gray-500 hover:text-gray-700'}`}
               >
-                Cancel
+                Expense
               </button>
               <button
-                type="submit"
-                className={`px-8 py-2.5 text-white rounded-lg transition font-medium shadow-sm ${transactionType === 'income' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                type="button"
+                onClick={() => {
+                  setTransactionType('income');
+                  setIsCustomCategory(false);
+                }}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition ${transactionType === 'income' ? 'bg-white shadow-sm text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
               >
-                {editingId ? 'Save Changes' : `Add ${transactionType === 'income' ? 'Income' : 'Expense'}`}
+                Income
               </button>
             </div>
-          </form>
+
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Date</label>
+                <input
+                  type="date"
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2.5 transition"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Amount (Rs.)</label>
+                <input
+                  type="number"
+                  required
+                  min="0.01"
+                  step="0.01"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2.5 transition"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
+                {isCustomCategory ? (
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      required
+                      autoFocus
+                      placeholder="Enter custom category..."
+                      value={customCategory}
+                      onChange={(e) => {
+                        setCustomCategory(e.target.value);
+                        setCategory(e.target.value);
+                      }}
+                      className="w-full border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2.5 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomCategory(false);
+                        setCustomCategory('');
+                        setCategory(activeCategories[0]);
+                      }}
+                      className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    value={category}
+                    onChange={(e) => {
+                      if (e.target.value === 'ADD_NEW') {
+                        setIsCustomCategory(true);
+                        setCategory('');
+                      } else {
+                        setCategory(e.target.value);
+                      }
+                    }}
+                    className="w-full border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2.5 bg-white transition cursor-pointer"
+                  >
+                    {activeCategories.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                    <option value="ADD_NEW" className="font-semibold text-blue-600">+ Add New Category</option>
+                  </select>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Title / Note</label>
+                <input
+                  type="text"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={transactionType === 'income' ? "e.g., Salary" : "e.g., Weekly Groceries"}
+                  className="w-full border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border p-2.5 transition"
+                />
+              </div>
+              <div className="md:col-span-2 flex items-center justify-end space-x-3 mt-4 pt-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={`px-8 py-2.5 text-white rounded-lg transition font-medium shadow-sm ${transactionType === 'income' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                >
+                  {editingId ? 'Save Changes' : `Add ${transactionType === 'income' ? 'Income' : 'Expense'}`}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

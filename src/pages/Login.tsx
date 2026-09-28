@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Wallet, ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -49,8 +49,8 @@ export default function Login() {
         </div>
 
         <div className="relative z-10 max-w-md">
-          <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl inline-block mb-6">
-            <Wallet className="h-10 w-10 text-white" />
+          <div className="bg-white/10 backdrop-blur-md p-1 rounded-2xl inline-block mb-6 border border-white/20">
+            <img src="/logo.jpg" alt="Logo" className="h-12 w-12 rounded-xl object-contain shadow-sm" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-6 leading-tight">
             Welcome back to your financial hub.
@@ -76,8 +76,8 @@ export default function Login() {
           
           {/* Mobile Logo (Visible only on mobile) */}
           <div className="lg:hidden flex justify-center mb-8">
-            <div className="bg-blue-50 p-3 rounded-2xl">
-              <Wallet className="h-8 w-8 text-blue-600" />
+            <div className="bg-white p-1 rounded-2xl shadow-sm border border-gray-100">
+              <img src="/logo.jpg" alt="Logo" className="h-10 w-10 rounded-xl object-contain" />
             </div>
           </div>
 

@@ -173,7 +173,8 @@ export default function Home() {
 
       <footer className="bg-gray-900 border-t border-gray-800 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center justify-center md:justify-start mb-4 md:mb-0">
+          <div className="flex items-center justify-center md:justify-start mb-4 md:mb-0 space-x-3">
+            <img src="/logo.jpg" alt="Logo" className="w-8 h-8 rounded-lg object-contain shadow-sm opacity-90" />
             <span className="text-xl font-bold tracking-tight text-white">ExpenseTracker</span>
           </div>
           <p className="text-gray-400 text-sm">
