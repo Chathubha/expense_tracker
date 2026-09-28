@@ -174,18 +174,6 @@ export default function Dashboard() {
 
   const activeCategories = transactionType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
-  // Group filtered transactions by date
-  const groupedTransactions = filteredTransactions.reduce((groups, transaction) => {
-    const d = transaction.date;
-    if (!groups[d]) {
-      groups[d] = [];
-    }
-    groups[d].push(transaction);
-    return groups;
-  }, {} as Record<string, Transaction[]>);
-
-  const sortedDates = Object.keys(groupedTransactions).sort((a, b) => b.localeCompare(a));
-
   return (
     <div className="space-y-6">
       {/* Filters & Action */}
@@ -409,73 +397,50 @@ export default function Dashboard() {
               <p className="mt-1">Adjust your filters or add a new transaction.</p>
             </div>
           ) : (
-            <div className="space-y-6">
-              {sortedDates.map((dateStr) => {
-                const dayTransactions = groupedTransactions[dateStr];
-                const dayTotalIncome = dayTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-                const dayTotalExpense = dayTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-                
-                // Format date nicely
-                const dateObj = new Date(dateStr);
-                const isToday = new Date().toISOString().split('T')[0] === dateStr;
-                const dateTitle = isToday ? 'Today' : dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-
-                return (
-                  <div key={dateStr} className="space-y-3">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-                      <h3 className="font-semibold text-gray-700">{dateTitle}</h3>
-                      <div className="text-xs space-x-3">
-                        {dayTotalIncome > 0 && <span className="text-green-600 font-medium">+Rs. {dayTotalIncome.toLocaleString()}</span>}
-                        {dayTotalExpense > 0 && <span className="text-red-600 font-medium">-Rs. {dayTotalExpense.toLocaleString()}</span>}
+            <div className="space-y-3">
+              {filteredTransactions.map((t) => (
+                <div 
+                  key={t.id} 
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border border-gray-50 hover:border-gray-200 hover:shadow-sm transition-all group bg-gray-50/50"
+                >
+                  <div className="flex items-start sm:items-center space-x-4 mb-2 sm:mb-0">
+                    <div className={`hidden sm:flex h-10 w-10 rounded-full items-center justify-center shrink-0 ${t.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                      {t.type === 'income' ? <ArrowUpCircle className="w-5 h-5" /> : <ArrowDownCircle className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900 text-sm">{t.title}</h4>
+                      <div className="flex items-center text-xs text-gray-500 mt-1">
+                        <span className="bg-white px-2 py-0.5 border border-gray-100 rounded-md font-medium text-gray-600 mr-2">
+                          {t.category}
+                        </span>
+                        <span>{new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      {dayTransactions.map((t) => (
-                        <div 
-                          key={t.id} 
-                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border border-gray-50 hover:border-gray-200 hover:shadow-sm transition-all group bg-gray-50/50"
-                        >
-                          <div className="flex items-start sm:items-center space-x-4 mb-2 sm:mb-0">
-                            <div className={`hidden sm:flex h-10 w-10 rounded-full items-center justify-center shrink-0 ${t.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                              {t.type === 'income' ? <ArrowUpCircle className="w-5 h-5" /> : <ArrowDownCircle className="w-5 h-5" />}
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-gray-900 text-sm">{t.title}</h4>
-                              <div className="flex items-center text-xs text-gray-500 mt-1">
-                                <span className="bg-white px-2 py-0.5 border border-gray-100 rounded-md font-medium text-gray-600 mr-2">
-                                  {t.category}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center justify-between sm:justify-end sm:space-x-4 w-full sm:w-auto pt-2 sm:pt-0">
-                            <span className={`font-bold text-base ${t.type === 'income' ? 'text-green-600' : 'text-gray-900'}`}>
-                              {t.type === 'income' ? '+' : '-'}Rs. {t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                            <div className="flex space-x-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button 
-                                onClick={() => handleEdit(t)} 
-                                className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition"
-                                title="Edit"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </button>
-                              <button 
-                                onClick={() => handleDelete(t.id)} 
-                                className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                  </div>
+                  
+                  <div className="flex items-center justify-between sm:justify-end sm:space-x-4 w-full sm:w-auto pt-2 sm:pt-0">
+                    <span className={`font-bold text-base ${t.type === 'income' ? 'text-green-600' : 'text-gray-900'}`}>
+                      {t.type === 'income' ? '+' : '-'}Rs. {t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <div className="flex space-x-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => handleEdit(t)} 
+                        className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                        title="Edit"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(t.id)} 
+                        className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>
