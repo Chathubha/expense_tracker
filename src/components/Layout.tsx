@@ -7,7 +7,6 @@ import {
   ArrowRightLeft, 
   Settings, 
   LogOut, 
-  Wallet,
   Menu,
   X
 } from 'lucide-react';
@@ -48,10 +47,8 @@ export default function Layout() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 fixed h-full z-10">
         <div className="p-6">
-          <Link to="/" className="flex items-center text-blue-600">
-            <div className="bg-blue-50 p-2 rounded-xl mr-3">
-              <Wallet className="h-6 w-6" />
-            </div>
+          <Link to="/" className="flex items-center">
+            <img src="/logo.jpg" alt="ExpenseTracker Logo" className="w-10 h-10 rounded-xl object-contain mr-3 shadow-sm border border-gray-100" />
             <span className="font-bold text-xl tracking-tight text-gray-900">ExpenseTracker</span>
           </Link>
         </div>
@@ -89,8 +86,8 @@ export default function Layout() {
 
       {/* Mobile Header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 z-20 flex items-center justify-between px-4">
-        <Link to="/" className="flex items-center text-blue-600">
-          <Wallet className="h-6 w-6 mr-2" />
+        <Link to="/" className="flex items-center">
+          <img src="/logo.jpg" alt="Logo" className="w-8 h-8 mr-2 rounded-lg object-contain shadow-sm border border-gray-100" />
           <span className="font-bold text-lg tracking-tight text-gray-900">ExpenseTracker</span>
         </Link>
         <button 

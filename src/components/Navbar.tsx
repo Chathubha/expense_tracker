@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { LogOut, Wallet, LayoutDashboard, LogIn, UserPlus } from 'lucide-react';
+import { LogOut, LayoutDashboard, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
@@ -15,10 +15,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center text-blue-600 hover:text-blue-700 transition group">
-              <div className="bg-blue-50 p-2 rounded-xl group-hover:bg-blue-100 transition mr-3">
-                <Wallet className="h-6 w-6" />
-              </div>
+            <Link to="/" className="flex items-center group">
+              <img src="/logo.jpg" alt="Logo" className="w-10 h-10 rounded-xl object-contain mr-3 shadow-sm border border-gray-100 group-hover:opacity-90 transition" />
               <span className="font-bold text-xl tracking-tight text-gray-900 hidden sm:block">ExpenseTracker</span>
             </Link>
           </div>
