@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Trash2, Edit, Filter, ArrowUpCircle, ArrowDownCircle, DollarSign } from 'lucide-react';
+import { Plus, Trash2, Edit, Filter, ArrowUpCircle, ArrowDownCircle, Wallet } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 type Transaction = {
@@ -50,14 +50,13 @@ export default function Dashboard() {
 
   // Filter State
   const [filterMonth, setFilterMonth] = useState<string>('All');
-  const [filterType, setFilterType] = useState<string>('All'); // 'All', 'income', 'expense'
+  const [filterType, setFilterType] = useState<string>('All');
 
-  // Update category dropdown if type changes
   useEffect(() => {
     if (!editingId) {
       setCategory(transactionType === 'expense' ? EXPENSE_CATEGORIES[0] : INCOME_CATEGORIES[0]);
     }
-  }, [transactionType]);
+  }, [transactionType, editingId]);
 
   useEffect(() => {
     fetchTransactions();
@@ -73,7 +72,6 @@ export default function Dashboard() {
     if (error) {
       console.error('Error fetching transactions:', error);
     } else {
-      // Handle legacy records without 'type'
       const formattedData = (data || []).map(item => ({
         ...item,
         type: item.type || 'expense'
@@ -114,7 +112,7 @@ export default function Dashboard() {
         resetForm();
         fetchTransactions();
       } else {
-        alert("Failed to add transaction. Did you run the SQL script to add the 'type' column?");
+        alert("Failed to add transaction. Check your connection or database schema.");
       }
     }
   };
@@ -174,6 +172,18 @@ export default function Dashboard() {
 
   const activeCategories = transactionType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
+  // Group filtered transactions by date
+  const groupedTransactions = filteredTransactions.reduce((groups, transaction) => {
+    const d = transaction.date;
+    if (!groups[d]) {
+      groups[d] = [];
+    }
+    groups[d].push(transaction);
+    return groups;
+  }, {} as Record<string, Transaction[]>);
+
+  const sortedDates = Object.keys(groupedTransactions).sort((a, b) => b.localeCompare(a));
+
   return (
     <div className="space-y-6">
       {/* Filters & Action */}
@@ -215,11 +225,11 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
           <div className="flex items-center space-x-2 text-gray-500 mb-2">
-            <DollarSign className="w-4 h-4" />
+            <Wallet className="w-4 h-4" />
             <h3 className="text-sm font-medium">Net Balance</h3>
           </div>
           <p className={`text-3xl font-bold ${balance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
-            ${balance.toFixed(2)}
+            Rs. {balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         </div>
 
@@ -228,7 +238,7 @@ export default function Dashboard() {
             <ArrowUpCircle className="w-4 h-4" />
             <h3 className="text-sm font-medium">Total Income</h3>
           </div>
-          <p className="text-3xl font-bold tracking-tight">${totalIncome.toFixed(2)}</p>
+          <p className="text-3xl font-bold tracking-tight">Rs. {totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
 
         <div className="bg-gradient-to-br from-red-500 to-red-600 p-6 rounded-2xl shadow-md text-white flex flex-col justify-center">
@@ -236,7 +246,7 @@ export default function Dashboard() {
             <ArrowDownCircle className="w-4 h-4" />
             <h3 className="text-sm font-medium">Total Expenses</h3>
           </div>
-          <p className="text-3xl font-bold tracking-tight">${totalExpense.toFixed(2)}</p>
+          <p className="text-3xl font-bold tracking-tight">Rs. {totalExpense.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
       </div>
 
@@ -274,7 +284,7 @@ export default function Dashboard() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Amount ($)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Amount (Rs.)</label>
               <input
                 type="number"
                 required
@@ -350,7 +360,7 @@ export default function Dashboard() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: any) => `$${Number(value).toFixed(2)}`}
+                    formatter={(value: any) => `Rs. ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend wrapperStyle={{ paddingTop: '20px' }} />
@@ -364,7 +374,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Transactions List */}
+        {/* Day by Day Transactions List */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-gray-800">Recent Transactions</h2>
@@ -380,51 +390,73 @@ export default function Dashboard() {
               <p className="mt-1">Adjust your filters or add a new transaction.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredTransactions.map((t) => (
-                <div 
-                  key={t.id} 
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all group"
-                >
-                  <div className="flex items-start sm:items-center space-x-4 mb-3 sm:mb-0">
-                    <div className={`hidden sm:flex h-12 w-12 rounded-full items-center justify-center shrink-0 ${t.type === 'income' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                      {t.type === 'income' ? <ArrowUpCircle className="w-6 h-6" /> : <ArrowDownCircle className="w-6 h-6" />}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 text-base">{t.title}</h4>
-                      <div className="flex items-center text-xs text-gray-500 mt-1 space-x-2">
-                        <span className="bg-gray-100 px-2 py-0.5 rounded-md font-medium text-gray-600">
-                          {t.category}
-                        </span>
-                        <span>•</span>
-                        <span>{new Date(t.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            <div className="space-y-6">
+              {sortedDates.map((dateStr) => {
+                const dayTransactions = groupedTransactions[dateStr];
+                const dayTotalIncome = dayTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+                const dayTotalExpense = dayTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+                
+                // Format date nicely
+                const dateObj = new Date(dateStr);
+                const isToday = new Date().toISOString().split('T')[0] === dateStr;
+                const dateTitle = isToday ? 'Today' : dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+
+                return (
+                  <div key={dateStr} className="space-y-3">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                      <h3 className="font-semibold text-gray-700">{dateTitle}</h3>
+                      <div className="text-xs space-x-3">
+                        {dayTotalIncome > 0 && <span className="text-green-600 font-medium">+Rs. {dayTotalIncome.toLocaleString()}</span>}
+                        {dayTotalExpense > 0 && <span className="text-red-600 font-medium">-Rs. {dayTotalExpense.toLocaleString()}</span>}
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between sm:justify-end sm:space-x-6 w-full sm:w-auto border-t sm:border-0 border-gray-100 pt-3 sm:pt-0">
-                    <span className={`font-bold text-lg ${t.type === 'income' ? 'text-green-600' : 'text-gray-900'}`}>
-                      {t.type === 'income' ? '+' : '-'}${t.amount.toFixed(2)}
-                    </span>
-                    <div className="flex space-x-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => handleEdit(t)} 
-                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition"
-                        title="Edit"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(t.id)} 
-                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <div className="space-y-2">
+                      {dayTransactions.map((t) => (
+                        <div 
+                          key={t.id} 
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border border-gray-50 hover:border-gray-200 hover:shadow-sm transition-all group bg-gray-50/50"
+                        >
+                          <div className="flex items-start sm:items-center space-x-4 mb-2 sm:mb-0">
+                            <div className={`hidden sm:flex h-10 w-10 rounded-full items-center justify-center shrink-0 ${t.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                              {t.type === 'income' ? <ArrowUpCircle className="w-5 h-5" /> : <ArrowDownCircle className="w-5 h-5" />}
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gray-900 text-sm">{t.title}</h4>
+                              <div className="flex items-center text-xs text-gray-500 mt-1">
+                                <span className="bg-white px-2 py-0.5 border border-gray-100 rounded-md font-medium text-gray-600 mr-2">
+                                  {t.category}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between sm:justify-end sm:space-x-4 w-full sm:w-auto pt-2 sm:pt-0">
+                            <span className={`font-bold text-base ${t.type === 'income' ? 'text-green-600' : 'text-gray-900'}`}>
+                              {t.type === 'income' ? '+' : '-'}Rs. {t.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <div className="flex space-x-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => handleEdit(t)} 
+                                className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(t.id)} 
+                                className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
