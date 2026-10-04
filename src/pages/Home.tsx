@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { ArrowRight, Shield, Zap, PieChart, Smartphone } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Home() {
   const { user } = useAuth();
@@ -15,29 +16,64 @@ export default function Home() {
         <section className="relative pt-24 pb-20 lg:pt-36 lg:pb-32 overflow-hidden">
           {/* Ambient Background Glows */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none">
-            <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
-            <div className="absolute top-12 -right-24 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
-            <div className="absolute -bottom-24 left-1/3 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70"></div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 0.7, scale: 1 }}
+              transition={{ duration: 2, ease: "easeOut" }}
+              className="absolute -top-24 -left-24 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl"
+            ></motion.div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 0.7, scale: 1 }}
+              transition={{ duration: 2, delay: 0.3, ease: "easeOut" }}
+              className="absolute top-12 -right-24 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl"
+            ></motion.div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 0.7, scale: 1 }}
+              transition={{ duration: 2, delay: 0.6, ease: "easeOut" }}
+              className="absolute -bottom-24 left-1/3 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl"
+            ></motion.div>
           </div>
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <div className="inline-flex items-center space-x-2 bg-white/60 backdrop-blur-md border border-gray-200/60 text-gray-800 px-4 py-2 rounded-full text-sm font-semibold mb-8 shadow-sm">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center space-x-2 bg-white/60 backdrop-blur-md border border-gray-200/60 text-gray-800 px-4 py-2 rounded-full text-sm font-semibold mb-8 shadow-sm"
+            >
               <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
               <span>The #1 Personal Finance App</span>
-            </div>
+            </motion.div>
             
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 tracking-tighter mb-8 leading-[1.1]">
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 tracking-tighter mb-8 leading-[1.1]"
+            >
               Manage your money<br className="hidden sm:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
                 without the stress.
               </span>
-            </h1>
+            </motion.h1>
             
-            <p className="text-lg sm:text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-lg sm:text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed"
+            >
               Track your expenses, analyze your spending habits, and build a better financial future with our beautifully designed platform.
-            </p>
+            </motion.p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4"
+            >
               <Link 
                 to={user ? "/dashboard" : "/register"} 
                 className="w-full sm:w-auto flex items-center justify-center bg-gray-900 text-white px-8 py-4 rounded-xl font-medium text-lg hover:bg-gray-800 transition-all shadow-xl shadow-gray-900/20 hover:scale-[1.02] active:scale-[0.98]"
@@ -53,7 +89,7 @@ export default function Home() {
                   Sign In
                 </Link>
               )}
-            </div>
+            </motion.div>
 
             {/* Dashboard Mockup Image */}
             <div className="mt-20 relative max-w-5xl mx-auto perspective-[2000px]">

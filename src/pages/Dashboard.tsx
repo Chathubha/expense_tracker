@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import { Plus, Trash2, Edit, Filter, ArrowUpCircle, ArrowDownCircle, Wallet } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { motion } from 'framer-motion';
 
 type Transaction = {
   id: string;
@@ -268,7 +270,12 @@ export default function Dashboard() {
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-blue-100 relative w-full max-w-2xl my-8">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-blue-100 relative w-full max-w-2xl my-8"
+          >
             <div className={`absolute top-0 left-0 w-full h-1 ${transactionType === 'income' ? 'bg-green-500' : 'bg-red-500'}`}></div>
             <h2 className="text-xl font-bold mb-6 text-gray-800">{editingId ? 'Update Transaction' : 'Add New Transaction'}</h2>
             
@@ -394,13 +401,18 @@ export default function Dashboard() {
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Charts */}
-        <div className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col"
+        >
           <h2 className="text-lg font-bold mb-4 text-gray-800">Expense Breakdown</h2>
           {expenseCategoryData.length > 0 ? (
             <div className="flex-1 min-h-[300px]">
@@ -432,10 +444,15 @@ export default function Dashboard() {
               No expenses to show
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Day by Day Transactions List */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+        >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-gray-800">Recent Transactions</h2>
           </div>
@@ -451,9 +468,12 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredTransactions.map((t) => (
-                <div 
+              {filteredTransactions.slice(0, 5).map((t, i) => (
+                <motion.div 
                   key={t.id} 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: i * 0.1 }}
                   className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl border border-gray-50 hover:border-gray-200 hover:shadow-sm transition-all group bg-gray-50/50"
                 >
                   <div className="flex items-start sm:items-center space-x-4 mb-2 sm:mb-0">
@@ -492,11 +512,22 @@ export default function Dashboard() {
                       </button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
+              
+              {filteredTransactions.length > 5 && (
+                <div className="pt-2 text-center">
+                  <Link 
+                    to="/dashboard/transactions" 
+                    className="inline-block text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline transition-all"
+                  >
+                    View All Transactions →
+                  </Link>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
