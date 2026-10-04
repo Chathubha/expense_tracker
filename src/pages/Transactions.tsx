@@ -18,7 +18,11 @@ export default function Transactions() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('All');
-  const [filterDate, setFilterDate] = useState('');
+  
+  // Date Range Filters
+  const [dateRange, setDateRange] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     fetchTransactions();
@@ -47,7 +51,32 @@ export default function Transactions() {
     const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           t.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'All' || t.type === filterType;
-    const matchesDate = filterDate === '' || t.date === filterDate;
+    
+    let matchesDate = true;
+    if (dateRange !== 'all') {
+      const tDate = new Date(t.date);
+      const today = new Date();
+      
+      if (dateRange === 'this_month') {
+        matchesDate = tDate.getMonth() === today.getMonth() && tDate.getFullYear() === today.getFullYear();
+      } else if (dateRange === 'last_month') {
+        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        matchesDate = tDate.getMonth() === lastMonth.getMonth() && tDate.getFullYear() === lastMonth.getFullYear();
+      } else if (dateRange === 'last_7_days') {
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        matchesDate = tDate >= sevenDaysAgo && tDate <= today;
+      } else if (dateRange === 'custom') {
+        if (startDate && endDate) {
+          matchesDate = tDate >= new Date(startDate) && tDate <= new Date(endDate);
+        } else if (startDate) {
+          matchesDate = tDate >= new Date(startDate);
+        } else if (endDate) {
+          matchesDate = tDate <= new Date(endDate);
+        }
+      }
+    }
+    
     return matchesSearch && matchesType && matchesDate;
   });
 
@@ -87,30 +116,57 @@ export default function Transactions() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
+        <div className="flex flex-col sm:flex-row gap-4 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input 
               type="text" 
               placeholder="Search by title or category..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
             />
           </div>
+          
           <div className="flex items-center space-x-2 bg-white px-3 py-1.5 border border-gray-200 rounded-xl shadow-sm">
             <Calendar className="w-5 h-5 text-gray-400" />
-            <input 
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-              className="border-none text-sm focus:ring-0 p-1 text-gray-600 bg-transparent outline-none cursor-pointer"
-            />
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="border-none text-sm focus:ring-0 p-1 text-gray-700 bg-transparent outline-none cursor-pointer"
+            >
+              <option value="all">All Time</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="last_7_days">Last 7 Days</option>
+              <option value="custom">Custom Range</option>
+            </select>
           </div>
-          {(searchTerm !== '' || filterType !== 'All' || filterDate !== '') && (
+
+          {dateRange === 'custom' && (
+            <div className="flex items-center space-x-2 bg-white px-3 py-1.5 border border-gray-200 rounded-xl shadow-sm animate-in fade-in zoom-in duration-200">
+              <input 
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="border-none text-sm focus:ring-0 p-1 text-gray-600 bg-transparent outline-none cursor-pointer"
+                title="Start Date"
+              />
+              <span className="text-gray-400 text-sm">to</span>
+              <input 
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="border-none text-sm focus:ring-0 p-1 text-gray-600 bg-transparent outline-none cursor-pointer"
+                title="End Date"
+              />
+            </div>
+          )}
+
+          {(searchTerm !== '' || filterType !== 'All' || dateRange !== 'all') && (
             <button 
-              onClick={() => { setSearchTerm(''); setFilterType('All'); setFilterDate(''); }}
-              className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition"
+              onClick={() => { setSearchTerm(''); setFilterType('All'); setDateRange('all'); setStartDate(''); setEndDate(''); }}
+              className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition whitespace-nowrap"
             >
               Clear Filters
             </button>
