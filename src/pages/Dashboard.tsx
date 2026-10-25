@@ -35,6 +35,7 @@ const INCOME_CATEGORIES = [
 ];
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CF8', '#F472B6', '#FBBF24', '#9CA3AF'];
+const INCOME_COLORS = ['#10B981', '#06B6D4', '#3B82F6', '#8B5CF6', '#F59E0B', '#14B8A6', '#EC4899', '#84CC16'];
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -56,6 +57,7 @@ export default function Dashboard() {
   const [filterMonth, setFilterMonth] = useState<string>('All');
   const [filterType, setFilterType] = useState<string>('All');
   const [filterDate, setFilterDate] = useState<string>(''); // Exact date filter
+  const [breakdownType, setBreakdownType] = useState<'expense' | 'income'>('expense');
 
   useEffect(() => {
     if (!editingId) {
@@ -166,8 +168,8 @@ export default function Dashboard() {
   const totalExpense = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
   const balance = totalIncome - totalExpense;
 
-  const expenseCategoryData = filteredTransactions
-    .filter(t => t.type === 'expense')
+  const categoryBreakdownData = filteredTransactions
+    .filter(t => t.type === breakdownType)
     .reduce((acc: any, t) => {
       const existing = acc.find((c: any) => c.name === t.category);
       if (existing) {
@@ -413,13 +415,33 @@ export default function Dashboard() {
           transition={{ duration: 0.5 }}
           className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col"
         >
-          <h2 className="text-lg font-bold mb-4 text-gray-800">Expense Breakdown</h2>
-          {expenseCategoryData.length > 0 ? (
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-800">
+              {breakdownType === 'expense' ? 'Expense Breakdown' : 'Sales / Income'}
+            </h2>
+            <div className="flex bg-gray-100 p-0.5 rounded-lg text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setBreakdownType('expense')}
+                className={`px-2.5 py-1 rounded-md transition ${breakdownType === 'expense' ? 'bg-white text-red-600 shadow-xs' : 'text-gray-500 hover:text-gray-900'}`}
+              >
+                Expenses
+              </button>
+              <button
+                type="button"
+                onClick={() => setBreakdownType('income')}
+                className={`px-2.5 py-1 rounded-md transition ${breakdownType === 'income' ? 'bg-white text-emerald-600 shadow-xs' : 'text-gray-500 hover:text-gray-900'}`}
+              >
+                Sales / Income
+              </button>
+            </div>
+          </div>
+          {categoryBreakdownData.length > 0 ? (
             <div className="flex-1 min-h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={expenseCategoryData}
+                    data={categoryBreakdownData}
                     cx="50%"
                     cy="50%"
                     innerRadius={70}
@@ -427,9 +449,10 @@ export default function Dashboard() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {expenseCategoryData.map((_entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
+                    {categoryBreakdownData.map((_entry: any, index: number) => {
+                      const palette = breakdownType === 'income' ? INCOME_COLORS : COLORS;
+                      return <Cell key={`cell-${index}`} fill={palette[index % palette.length]} />;
+                    })}
                   </Pie>
                   <Tooltip 
                     formatter={(value: any) => `Rs. ${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -440,8 +463,10 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex-1 min-h-[300px] flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200 mt-2">
-              No expenses to show
+            <div className="flex-1 min-h-[300px] flex items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200 mt-2 text-center p-4">
+              {breakdownType === 'expense' 
+                ? 'No expenses to show for this filter' 
+                : 'No sales or income to show for this filter'}
             </div>
           )}
         </motion.div>

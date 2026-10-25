@@ -27,12 +27,12 @@ export default function Layout() {
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/" replace />;
   }
 
   const handleLogout = async () => {
+    navigate('/', { replace: true });
     await supabase.auth.signOut();
-    navigate('/login');
   };
 
   const navItems = [

@@ -1,12 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { LogOut, LayoutDashboard, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
+    navigate('/', { replace: true });
     await supabase.auth.signOut();
   };
 
